@@ -1,0 +1,13 @@
+Whitelistd (NeoForge 1.21.1 port)
+Copyright (c) 2024 yansunsky
+
+本仓库为 whitelistd 到 NeoForge 1.21.1 的移植版本。
+
+原始项目：
+  whitelistd by ruattd (Forest Craft)
+  Copyright (c) 2024 ruattd, Forest Craft
+  许可证：GNU General Public License v3.0 (GPLv3)
+  原仓库：https://github.com/ruattd/whitelistd
+
+本移植版本同样以 GNU General Public License v3.0 发布。
+根据 GPLv3，原始版权声明与许可证文本（见 LICENSE）必须随分发保留。
