@@ -92,8 +92,26 @@ public final class Commands {
                 .then(literal("list")
                         .executes(context -> {
                             CommandSourceStack source = context.getSource();
-                            for (PlayerInfo info : instance.getSearchList().getItems()) {
+                            SearchList searchList = instance.getSearchList();
+                            if (searchList.size() == 0) {
+                                source.sendSystemMessage(Component.translatable("wld.status.empty_list"));
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            for (PlayerInfo info : searchList.getItems()) {
                                 source.sendSystemMessage(Component.literal(info.getName() + '{' + info.getUuid() + '}'));
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        })
+                )
+                .then(literal("clear")
+                        .executes(context -> {
+                            CommandSourceStack source = context.getSource();
+                            SearchList.ClearState state = instance.getSearchList().clear();
+                            if (state == SearchList.ClearState.SUCCESSFUL) {
+                                source.sendSystemMessage(Component.translatable("wld.status.clear_whitelist"));
+                                MessageHelper.sendLogW(Component.translatable("wld.console.clear_whitelist", source.getTextName()).getString());
+                            } else {
+                                source.sendFailure(Component.translatable("wld.status.failed", state.toString()));
                             }
                             return Command.SINGLE_SUCCESS;
                         })
