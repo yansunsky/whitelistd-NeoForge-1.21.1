@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.logging.LogUtils;
+import com.yansunsky.whitelistd.impl.JsonSearchList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public final class Whitelistd {
     private final Path configDir;
     private final Path configFile;
     private final WhitelistdConfig config;
+    private final SearchList searchList;
 
     /**
      * 构造函数由 NeoForge 在加载模组时调用。
@@ -44,6 +46,7 @@ public final class Whitelistd {
         configDir = FMLPaths.CONFIGDIR.get().resolve("Whitelistd");
         configFile = configDir.resolve("config.json");
         config = loadConfig();
+        searchList = createSearchList();
 
         LOGGER.info("Whitelistd NeoForge loaded. Config file: {}", configFile.toAbsolutePath());
     }
@@ -87,6 +90,15 @@ public final class Whitelistd {
         return config;
     }
 
+    /**
+     * 获取当前白名单搜索列表。
+     *
+     * @return 搜索列表实例
+     */
+    public SearchList getSearchList() {
+        return searchList;
+    }
+
     private WhitelistdConfig loadConfig() {
         try {
             Files.createDirectories(configDir);
@@ -106,6 +118,18 @@ public final class Whitelistd {
         } catch (IOException e) {
             throw new WhitelistdRuntimeException("Failed to read/write Whitelistd config file", e);
         }
+    }
+
+    private SearchList createSearchList() {
+        SearchList createdSearchList = switch (config.getStorageMode()) {
+            case JSON -> new JsonSearchList();
+            case HTTP, MYSQL, MONGODB -> throw new WhitelistdRuntimeException(
+                    "Storage mode " + config.getStorageMode() + " is not implemented yet"
+            );
+        };
+        createdSearchList.init(config.getSearchMode(), config.isPlayerNameCaseSensitive(), config.getStorageArgs());
+        LOGGER.info("Whitelistd search list initialized with {} mode", config.getStorageMode());
+        return createdSearchList;
     }
 
     private void writeConfigFile(WhitelistdConfig config) throws IOException {
