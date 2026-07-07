@@ -5,10 +5,15 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.logging.LogUtils;
 import com.yansunsky.whitelistd.impl.JsonSearchList;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -34,6 +39,7 @@ public final class Whitelistd {
     private boolean ready;
     private boolean enabled = true;
     private boolean allowAll;
+    private boolean showClientWarning = true;
     private final Path configDir;
     private final Path configFile;
     private final WhitelistdConfig config;
@@ -55,6 +61,7 @@ public final class Whitelistd {
         config = loadConfig();
         searchList = createSearchList();
         NeoForge.EVENT_BUS.addListener(Commands::register);
+        registerClientMisinstallWarning();
 
         LOGGER.info("Whitelistd NeoForge loaded. Config file: {}", configFile.toAbsolutePath());
     }
@@ -171,6 +178,23 @@ public final class Whitelistd {
         } catch (IOException e) {
             throw new WhitelistdRuntimeException("Failed to read/write Whitelistd config file", e);
         }
+    }
+
+    private void registerClientMisinstallWarning() {
+        if (!config.isDisableClientCheck() && FMLEnvironment.dist == Dist.CLIENT) {
+            allowAll = true;
+            NeoForge.EVENT_BUS.addListener(this::onPlayerLoggedIn);
+            LOGGER.warn("Whitelistd is intended for dedicated servers. Client-side allow-all mode has been enabled automatically.");
+        }
+    }
+
+    private void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!showClientWarning) {
+            return;
+        }
+        MessageHelper.sendSystemMessage(event.getEntity(), Component.translatable("wld.client.only_for_server").withStyle(ChatFormatting.RESET));
+        MessageHelper.sendSystemMessage(event.getEntity(), Component.translatable("wld.client.auto_allow_all").withStyle(ChatFormatting.GOLD));
+        showClientWarning = false;
     }
 
     private SearchList createSearchList() {

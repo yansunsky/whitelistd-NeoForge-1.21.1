@@ -3,6 +3,7 @@ package com.yansunsky.whitelistd;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 
 /**
  * Whitelistd 消息与日志辅助工具。
@@ -18,9 +19,23 @@ public final class MessageHelper {
      * @param message 消息内容
      */
     public static void sendSystemMessage(CommandSource target, Component message) {
-        target.sendSystemMessage(Component.empty()
+        target.sendSystemMessage(withPrefix(message));
+    }
+
+    /**
+     * 向玩家发送带 Whitelistd 前缀的系统消息。
+     *
+     * @param player 接收玩家
+     * @param message 消息内容
+     */
+    public static void sendSystemMessage(Player player, Component message) {
+        player.sendSystemMessage(withPrefix(message));
+    }
+
+    private static Component withPrefix(Component message) {
+        return Component.empty()
                 .append(Component.empty().withStyle(ChatFormatting.DARK_AQUA).append("Whitelistd: "))
-                .append(message));
+                .append(message);
     }
 
     /**
