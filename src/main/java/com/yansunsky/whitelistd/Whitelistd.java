@@ -5,8 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.logging.LogUtils;
 import com.yansunsky.whitelistd.impl.JsonSearchList;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -29,6 +31,9 @@ public final class Whitelistd {
 
     private static Whitelistd instance;
 
+    private boolean ready;
+    private boolean enabled = true;
+    private boolean allowAll;
     private final Path configDir;
     private final Path configFile;
     private final WhitelistdConfig config;
@@ -36,8 +41,10 @@ public final class Whitelistd {
 
     /**
      * 构造函数由 NeoForge 在加载模组时调用。
+     *
+     * @param modEventBus 模组事件总线，当前阶段无需直接使用
      */
-    public Whitelistd() {
+    public Whitelistd(IEventBus modEventBus) {
         if (instance != null) {
             throw new WhitelistdRuntimeException("Whitelistd can only be initialized once");
         }
@@ -47,6 +54,7 @@ public final class Whitelistd {
         configFile = configDir.resolve("config.json");
         config = loadConfig();
         searchList = createSearchList();
+        NeoForge.EVENT_BUS.addListener(Commands::register);
 
         LOGGER.info("Whitelistd NeoForge loaded. Config file: {}", configFile.toAbsolutePath());
     }
@@ -61,6 +69,51 @@ public final class Whitelistd {
             throw new WhitelistdRuntimeException("Whitelistd has not been initialized");
         }
         return instance;
+    }
+
+    /**
+     * 判断 Whitelistd 是否完成初始化。
+     *
+     * @return 已完成初始化返回 true
+     */
+    public boolean isReady() {
+        return ready;
+    }
+
+    /**
+     * 判断 Whitelistd 白名单拦截是否启用。
+     *
+     * @return 启用返回 true
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * 设置 Whitelistd 白名单拦截是否启用。
+     *
+     * @param enabled 是否启用
+     */
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * 判断是否临时允许所有玩家。
+     *
+     * @return 允许所有玩家返回 true
+     */
+    public boolean isAllowAll() {
+        return allowAll;
+    }
+
+    /**
+     * 设置是否临时允许所有玩家。
+     *
+     * @param allowAll 是否允许所有玩家
+     */
+    public void setAllowAll(boolean allowAll) {
+        this.allowAll = allowAll;
     }
 
     /**
@@ -128,6 +181,7 @@ public final class Whitelistd {
             );
         };
         createdSearchList.init(config.getSearchMode(), config.isPlayerNameCaseSensitive(), config.getStorageArgs());
+        ready = true;
         LOGGER.info("Whitelistd search list initialized with {} mode", config.getStorageMode());
         return createdSearchList;
     }
