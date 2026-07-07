@@ -56,8 +56,11 @@ neoForge {
             client()
 
             // LittleSkin / authlib-injector 认证支持（用于第三方皮肤站登录测试）。
-            // 需将 authlib-injector-1.2.7.jar 放到 run/ 目录（该目录已被 .gitignore 忽略，不会入库）。
-            jvmArgument '-javaagent:' + project.file('run/authlib-injector-1.2.7.jar').absolutePath.replace('\\', '/') + '=littleskin.cn'
+            // 仅当 run/authlib-injector-1.2.7.jar 存在时注入，避免缺少 jar 时 runClient 启动失败。
+            var authlibInjector = project.file('run/authlib-injector-1.2.7.jar')
+            if (authlibInjector.exists()) {
+                jvmArgument '-javaagent:' + authlibInjector.absolutePath.replace('\\', '/') + '=littleskin.cn'
+            }
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
@@ -68,8 +71,11 @@ neoForge {
             programArgument '--nogui'
 
             // LittleSkin / authlib-injector 认证支持（用于第三方皮肤站登录测试）。
-            // 需将 authlib-injector-1.2.7.jar 放到 run/ 目录（该目录已被 .gitignore 忽略，不会入库）。
-            jvmArgument '-javaagent:' + project.file('run/authlib-injector-1.2.7.jar').absolutePath.replace('\\', '/') + '=littleskin.cn'
+            // 仅当 run/authlib-injector-1.2.7.jar 存在时注入，避免缺少 jar 时 runServer 启动失败。
+            var authlibInjector = project.file('run/authlib-injector-1.2.7.jar')
+            if (authlibInjector.exists()) {
+                jvmArgument '-javaagent:' + authlibInjector.absolutePath.replace('\\', '/') + '=littleskin.cn'
+            }
 
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
